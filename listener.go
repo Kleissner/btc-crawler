@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/btcsuite/btcd/wire"
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"time"
+
+	"github.com/btcsuite/btcd/wire"
 )
 
 type Listener struct {
@@ -59,7 +61,7 @@ func (l *Listener) initialiseStatusMap() {
 // AssertOutDirectory creates the directory to contain the listening data
 func (l *Listener) AssertOutDirectory() {
 	now := time.Now()
-	l.dataDirName = "snapshot-" + now.Format(time.Stamp)
+	l.dataDirName = "snapshot-" + strconv.Itoa(int(now.Unix()))
 
 	os.Mkdir(l.dataDirName, 0777)
 }

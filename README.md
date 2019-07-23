@@ -1,5 +1,5 @@
 # btc-crawler
-A Bitcoin network crawler in Go.
+A Bitcoin network crawler in Go. This project was forked from https://github.com/agamble/btc-crawler. In the original code there were a bunch of incompatibilities which were fixed.
 
 To run:
 

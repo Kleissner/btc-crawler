@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -51,7 +52,7 @@ func (i *Image) GetNode(tcpAddr *net.TCPAddr) *Node {
 }
 
 func (i *Image) Save() {
-	f, err := os.Create("image-" + string(i.StartedAt.UnixNano()) + ".json")
+	f, err := os.Create("image-" + strconv.Itoa(int(i.StartedAt.UnixNano())) + ".json")
 	defer f.Close()
 
 	if err != nil {

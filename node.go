@@ -4,7 +4,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"errors"
-	"github.com/btcsuite/btcd/wire"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -14,6 +14,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/btcsuite/btcd/wire"
 )
 
 type Node struct {
@@ -95,7 +97,11 @@ func (n *Node) Handshake() error {
 		return err
 	}
 
-	verMsg, err := wire.NewMsgVersionFromConn(n.conn, nonce, 0)
+	//verMsg, err := wire.NewMsgVersionFromConn(n.conn, nonce, 0)
+	meAddr, youAddr := n.conn.LocalAddr(), n.conn.RemoteAddr()
+	me := wire.NewNetAddress(meAddr.(*net.TCPAddr), wire.SFNodeNetwork)
+	you := wire.NewNetAddress(youAddr.(*net.TCPAddr), wire.SFNodeNetwork)
+	verMsg := wire.NewMsgVersion(me, you, nonce, 0)
 
 	if err != nil {
 		log.Print("Create version message error:", err)
@@ -244,7 +250,9 @@ func (n *Node) InvWriter(dataDirName string, node <-chan *StampedInv) {
 	defer txnFile.Close()
 
 	if err != nil {
-		panic(err)
+		fmt.Printf("Error opening file '%s': %v\n", n.txnFilePath(), err)
+		return
+		//panic(err)
 	}
 
 	blkFile, err := os.OpenFile(n.blockFilePath(), os.O_WRONLY|os.O_APPEND, 0666)
