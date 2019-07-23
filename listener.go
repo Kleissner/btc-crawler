@@ -3,8 +3,6 @@ package main
 import (
 	"log"
 	"net"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcd/wire"
@@ -17,7 +15,6 @@ type Listener struct {
 	progressC   chan *watchProgress
 	onlineNodes []*Node
 	duration    time.Duration
-	dataDirName string
 	DoneC       chan struct{}
 
 	ListenTxs  bool
@@ -45,7 +42,7 @@ func (l *Listener) startListeners() {
 			node.ListenBlks = true
 		}
 
-		go node.Watch(l.progressC, l.closeC, l.addrC, l.dataDirName)
+		go node.Watch(l.progressC, l.closeC, l.addrC)
 	}
 }
 
@@ -56,14 +53,6 @@ func (l *Listener) initialiseStatusMap() {
 			CountSeen: 0,
 		}
 	}
-}
-
-// AssertOutDirectory creates the directory to contain the listening data
-func (l *Listener) AssertOutDirectory() {
-	now := time.Now()
-	l.dataDirName = "snapshot-" + strconv.Itoa(int(now.Unix()))
-
-	os.Mkdir(l.dataDirName, 0777)
 }
 
 func NetAddrToTcpAddr(netAddr *wire.NetAddress) *net.TCPAddr {
@@ -88,7 +77,7 @@ func (l *Listener) processNewAddrs(netAddrs []*wire.NetAddress) {
 		if !l.status[addrStr].Active {
 			n := NewNodeFromString(addrStr)
 			l.status[addrStr].Active = true
-			go n.Watch(l.progressC, l.closeC, l.addrC, l.dataDirName)
+			go n.Watch(l.progressC, l.closeC, l.addrC)
 			log.Printf("Tried to start new connection to... %s", addrStr)
 		}
 	}
@@ -97,7 +86,6 @@ func (l *Listener) processNewAddrs(netAddrs []*wire.NetAddress) {
 // Listen begins listening procedure.
 // Listener must be initialised first with a list of online nodes.
 func (l *Listener) Listen() {
-	l.AssertOutDirectory()
 	l.startListeners()
 	l.initialiseStatusMap()
 
@@ -115,11 +103,6 @@ func (l *Listener) Listen() {
 			for _, n := range l.onlineNodes {
 				n.StopWatching()
 			}
-			log.Println("Beginning decode process...")
-			time.Sleep(5)
-			dec := NewDecoder(l.dataDirName)
-			dec.Decode()
-			l.DoneC <- struct{}{}
 			return
 		case <-logTicker.C:
 			l.printProgress()
